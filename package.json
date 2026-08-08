@@ -1,0 +1,38 @@
+{
+  "name": "yms-model-management",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev:user",
+    "dev:admin": "vite --config vite.admin.config.ts",
+    "dev:user": "vite --config vite.user.config.ts",
+    "build": "tsc -b && npm run build:admin && npm run build:user",
+    "build:admin": "vite build --config vite.admin.config.ts",
+    "build:user": "vite build --config vite.user.config.ts",
+    "preview": "vite preview",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2",
+    "react-hook-form": "^7.53.0",
+    "@hookform/resolvers": "^3.9.0",
+    "zod": "^3.23.8",
+    "lucide-react": "^0.446.0",
+    "jspdf": "^2.5.2",
+    "clsx": "^2.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.9",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.8"
+  }
+}
