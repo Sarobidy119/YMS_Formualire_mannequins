@@ -4,6 +4,7 @@ import { ProtectedRoute } from './shared/components/ProtectedRoute'
 import { userAppUrl } from './shared/utils/appUrls'
 import { Login } from './client/pages/Login'
 import { ForgotPassword } from './client/pages/ForgotPassword'
+import { SetPassword } from './client/pages/SetPassword'
 import { AdminLayout } from './admin/layouts/AdminLayout'
 import { Dashboard } from './admin/pages/Dashboard'
 import { ModelsList } from './admin/pages/ModelsList'
@@ -16,6 +17,7 @@ export default function AdminApp() {
     <Route path="/" element={<Navigate to="/login" replace />} />
     <Route path="/login" element={<Login admin destination="/admin/dashboard" />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
+    <Route path="/reset-password" element={<SetPassword mode="reset" />} />
     <Route path="/admin" element={<ProtectedRoute requiredRole="admin" forbiddenAppUrl={userAppUrl} forbiddenPath="/client/profile"><AdminLayout /></ProtectedRoute>}>
       <Route path="dashboard" element={<Dashboard />} />
       <Route path="models" element={<ModelsList />} />

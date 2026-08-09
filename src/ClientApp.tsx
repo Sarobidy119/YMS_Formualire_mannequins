@@ -6,6 +6,7 @@ import { adminAppUrl, leaveForApp } from './shared/utils/appUrls'
 import { Login } from './client/pages/Login'
 import { Register } from './client/pages/Register'
 import { ForgotPassword } from './client/pages/ForgotPassword'
+import { SetPassword } from './client/pages/SetPassword'
 import { ModelForm } from './client/pages/ModelForm'
 import { MyProfile } from './client/pages/MyProfile'
 import { ClientLanding } from './client/pages/ClientLanding'
@@ -24,6 +25,8 @@ export default function ClientApp() {
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
+    <Route path="/reset-password" element={<SetPassword mode="reset" />} />
+    <Route path="/set-password" element={<SetPassword mode="invite" />} />
     <Route path="/client/onboarding" element={<ModelForm />} />
     <Route path="/client/profile" element={<ProtectedRoute requiredRole="model" forbiddenAppUrl={adminAppUrl} forbiddenPath="/admin/dashboard"><MyProfile /></ProtectedRoute>} />
     <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { signUp } from '../../shared/services/authService'
+import { checkRegistrationEligibility } from '../../shared/services/applicationsService'
 import { useToast } from '../../shared/components/Toast'
 import { formatErrorMessage } from '../../shared/utils/errorMessages'
 
@@ -34,6 +35,10 @@ export function Register() {
     }
     setLoading(true)
     try {
+      const eligible = await checkRegistrationEligibility(email)
+      if (!eligible) {
+        throw new Error("Votre candidature doit être validée par YMS avant la création du compte. Consultez l'email d'invitation après validation.")
+      }
       await signUp(email, password, fullName)
       showToast('success', 'Compte créé. Vérifie ton email pour confirmer.')
       navigate('/login')

@@ -87,7 +87,7 @@ export const consentSchema = z
   )
 
 export const photoValidation = {
-  maxSizeBytes: 5 * 1024 * 1024, // 5 Mo
+  maxSizeBytes: 10 * 1024 * 1024, // 10 Mo
   acceptedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
 }
 

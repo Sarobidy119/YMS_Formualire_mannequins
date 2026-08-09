@@ -52,8 +52,11 @@ export function Applications() {
   async function review(id: string, decision: 'approve' | 'reject') {
     setBusy(id)
     try {
-      await reviewApplication(id, decision)
+      const result = await reviewApplication(id, decision) as { invitationSent?: boolean } | undefined
       showToast('success', decision === 'approve' ? 'Candidature validée : fiche mannequin créée.' : 'Candidature refusée.')
+      if (decision === 'approve' && result?.invitationSent) {
+        showToast('success', 'Email d’invitation envoyé au candidat.')
+      }
       load()
     } catch (error) {
       showToast('error', error instanceof Error ? error.message : 'Action impossible.')

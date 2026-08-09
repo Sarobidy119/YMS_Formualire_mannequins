@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     const photoPaths: { type: string; path: string }[] = []
     for (const [key, value] of form.entries()) {
       if (!key.startsWith('photo_') || !(value instanceof File) || value.size === 0) continue
-      if (!allowedTypes.has(value.type) || value.size > 5 * 1024 * 1024) throw new Error('Photo invalide (JPEG, PNG ou WebP, 5 Mo max).')
+      if (!allowedTypes.has(value.type) || value.size > 10 * 1024 * 1024) throw new Error('Photo invalide (JPEG, PNG ou WebP, 10 Mo max).')
       const type = key.slice('photo_'.length)
       const extension = value.type.split('/')[1]
       const path = `${candidateId}/${type}.${extension}`

@@ -19,6 +19,8 @@ Deno.serve(async (req) => {
       return Response.json({ ok: true }, { headers: corsHeaders })
     }
     if (decision !== 'approve') throw new Error('Décision invalide.')
+    const userAppUrl = Deno.env.get('USER_APP_URL')?.replace(/\/$/, '')
+    if (!userAppUrl) throw new Error('La variable USER_APP_URL est manquante dans les secrets Supabase.')
     const d = app.data as Record<string, any>
     const category = d.gender === 'femme' ? 'mannequin_femme' : 'mannequin_homme'
     const { data: model, error: modelError } = await admin.from('models').insert({ first_name: d.first_name, last_name: d.last_name, birth_date: d.birth_date, gender: d.gender, city: d.city, district: d.district || null, phone: d.phone, whatsapp: d.whatsapp || null, email: app.email, emergency_contact_name: d.emergency_contact_name, emergency_contact_phone: d.emergency_contact_phone, emergency_contact_relation: d.emergency_contact_relation, category, level_yms: d.level_yms || null }).select().single()
@@ -37,7 +39,15 @@ Deno.serve(async (req) => {
     const paths = (app.photo_paths ?? []) as { type: string; path: string }[]
     if (paths.length) await admin.from('model_photos').insert(paths.map((p) => ({ model_id: model.id, photo_type: p.type, storage_path: p.path })))
     await admin.from('model_applications').update({ status: 'approuvee', model_id: model.id, reviewed_by: user.id, reviewed_at: new Date().toISOString(), review_note: note }).eq('id', app.id)
-    return Response.json({ ok: true }, { headers: corsHeaders })
+    const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(app.email, {
+      data: { full_name: app.full_name },
+      redirectTo: `${userAppUrl}/set-password`,
+    })
+    // Un utilisateur déjà créé n'a pas besoin d'une nouvelle invitation.
+    if (inviteError && !/already (registered|exists)|already been registered/i.test(inviteError.message)) {
+      throw new Error(`Candidature validée, mais l'email d'invitation n'a pas pu être envoyé : ${inviteError.message}`)
+    }
+    return Response.json({ ok: true, invitationSent: !inviteError }, { headers: corsHeaders })
   } catch (error) {
     // Une réponse 200 permet à l'interface d'afficher le diagnostic métier détaillé
     // plutôt que le message générique "Edge Function non-2xx".

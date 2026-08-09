@@ -68,6 +68,7 @@ export function Login({ admin = false, destination = '/' }: LoginProps) {
         </form>
 
         <div className="mt-5 text-sm">
+          {!admin && <Link to="/register" className="mr-2 font-medium text-yms-600 hover:underline">Créer un compte</Link>}
           <Link to="/forgot-password" className="font-medium text-yms-600 hover:underline">Mot de passe oublié ?</Link>
         </div>
       </div>

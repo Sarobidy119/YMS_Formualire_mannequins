@@ -5,7 +5,7 @@ export function validatePhotoFile(file: File): string | null {
     return 'Format non supporté. Utilise JPEG, PNG ou WebP.'
   }
   if (file.size > photoValidation.maxSizeBytes) {
-    return 'Fichier trop volumineux (max 5 Mo).'
+    return 'Fichier trop volumineux (max 10 Mo).'
   }
   return null
 }
