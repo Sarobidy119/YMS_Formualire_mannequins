@@ -20,13 +20,14 @@ function ClientHome() {
   const { profile, loading } = useAuth()
   if (loading) return null
   if (profile?.role === 'admin' && leaveForApp(adminAppUrl, '/admin/dashboard')) return null
-  return <Navigate to={profile?.role === 'model' ? '/client/dashboard' : '/client'} replace />
+  if (profile?.role === 'model') return <Navigate to="/client/dashboard" replace />
+  return <Navigate to="/client/landing" replace />
 }
 
 export default function ClientApp() {
   return <ToastProvider><BrowserRouter future={{ v7_relativeSplatPath: true }}><Routes>
     <Route path="/" element={<ClientHome />} />
-    <Route path="/client" element={<ClientLanding />} />
+    <Route path="/client/landing" element={<ClientLanding />} />
     
     <Route path="/register" element={<Register />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
