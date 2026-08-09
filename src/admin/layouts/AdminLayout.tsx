@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Users, Calendar, Activity, LogOut, ClipboardList } from 'lucide-react'
 import { signOut } from '../../shared/services/authService'
-import { supabase } from '../../lib/supabase'
+import { listApplications } from '../../shared/services/applicationsService'
 
 const navItems = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -18,11 +18,13 @@ export function AdminLayout() {
 
   useEffect(() => {
     const loadPendingApplications = async () => {
-      const { count } = await supabase
-        .from('model_applications')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'en_attente')
-      setPendingApplications(count ?? 0)
+      try {
+        const apps = await listApplications()
+        const count = apps.filter((app) => app.status === 'en_attente').length
+        setPendingApplications(count)
+      } catch {
+        setPendingApplications(0)
+      }
     }
     void loadPendingApplications()
     const interval = window.setInterval(loadPendingApplications, 30_000)

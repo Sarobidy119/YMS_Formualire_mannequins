@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { getModelFullProfile } from '../../shared/services/modelsService'
 import type { ModelFullProfile } from '../../shared/types/database.types'
-import { supabase } from '../../lib/supabase'
 import { StatusBadge } from '../../shared/components/Badge'
 import { Skeleton } from '../../shared/components/Skeleton'
 import { calculateAge } from '../../shared/utils/formatters'
-import { signOut } from '../../shared/services/authService'
+import { getCurrentProfile, signOut } from '../../shared/services/authService'
 import { useNavigate, Link } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 
@@ -19,23 +18,26 @@ export function MyProfile() {
 
   useEffect(() => {
     async function load() {
-      const { data: sessionData } = await supabase.auth.getSession()
-      if (!sessionData.session) return
-      const { data: modelRow } = await supabase
-        .from('models')
-        .select('id')
-        .eq('profile_id', sessionData.session.user.id)
-        .maybeSingle()
-
-      if (!modelRow) {
+      try {
+        const profile = await getCurrentProfile()
+        if (!profile) {
+          setLoading(false)
+          return
+        }
+        const profileId = (profile as { id?: string }).id
+        if (!profileId) {
+          setLoading(false)
+          return
+        }
+        const fullProfile = await getModelFullProfile(profileId, false)
+        setModel(fullProfile)
+      } catch {
+        setModel(null)
+      } finally {
         setLoading(false)
-        return
       }
-      const profile = await getModelFullProfile(modelRow.id, false)
-      setModel(profile)
-      setLoading(false)
     }
-    load()
+    void load()
   }, [])
 
   async function handleLogout() {

@@ -4,10 +4,7 @@ import { StepProgress } from '../components/StepProgress'
 import { PhotoUploadField } from '../components/PhotoUploadField'
 import { useToast } from '../../shared/components/Toast'
 import { submitApplication } from '../../shared/services/applicationsService'
-import { supabase } from '../../lib/supabase'
-import { createModel } from '../../shared/services/modelsService'
 import { formatErrorMessage } from '../../shared/utils/errorMessages'
-import { uploadModelPhoto } from '../../shared/services/photosService'
 import { isMinor } from '../../shared/utils/formatters'
 import type { PhotoType } from '../../shared/types/database.types'
 
@@ -202,97 +199,6 @@ export function ModelForm() {
       sessionStorage.removeItem(DRAFT_KEY)
       showToast('success', `Candidature envoyée (${result.applicationNumber}). YMS te contactera après examen.`)
       navigate('/client')
-      return
-
-      const { data: sessionData } = await supabase.auth.getSession()
-      if (!sessionData.session) throw new Error('Session expirée, reconnecte-toi.')
-      const profileId = sessionData.session!.user.id
-
-      const category = form.gender === 'femme' ? 'mannequin_femme' : 'mannequin_homme'
-
-      const model = await createModel({
-        profile_id: profileId,
-        first_name: form.first_name,
-        last_name: form.last_name,
-        birth_date: form.birth_date,
-        gender: form.gender as 'femme' | 'homme',
-        city: form.city,
-        district: form.district || null,
-        phone: form.phone,
-        whatsapp: form.whatsapp || null,
-        email: form.email || null,
-        emergency_contact_name: form.emergency_contact_name,
-        emergency_contact_phone: form.emergency_contact_phone,
-        emergency_contact_relation: form.emergency_contact_relation,
-        category,
-        level_yms: form.level_yms || null,
-      } as any)
-
-      await supabase.from('model_measurements').insert({
-        model_id: model.id,
-        height_cm: Number(form.height_cm),
-        weight_kg: form.weight_kg ? Number(form.weight_kg) : null,
-        shoe_size: form.shoe_size ? Number(form.shoe_size) : null,
-        clothing_size: form.clothing_size || null,
-        chest_cm: form.chest_cm ? Number(form.chest_cm) : null,
-        waist_cm: form.waist_cm ? Number(form.waist_cm) : null,
-        hips_cm: form.hips_cm ? Number(form.hips_cm) : null,
-        hair_color: form.hair_color || null,
-        eye_color: form.eye_color || null,
-        distinguishing_features: form.distinguishing_features || null,
-      })
-
-      await supabase.from('availabilities').insert({
-        model_id: model.id,
-        available_runway: form.available_runway,
-        available_shooting: form.available_shooting,
-        available_ad: form.available_ad,
-        available_event: form.available_event,
-        available_days: form.available_days,
-        available_hours: form.available_hours || null,
-        can_travel: form.can_travel,
-        travel_zone: form.travel_zone || null,
-      })
-
-      if (form.experience_codes.length > 0) {
-        const { data: expRows } = await supabase.from('experiences').select('id, code').in('code', form.experience_codes)
-        if (expRows) {
-          await supabase.from('model_experiences').insert(
-            expRows!.map((e) => ({ model_id: model.id, experience_id: e.id, details: form.experience_details || null }))
-          )
-        }
-      }
-
-      if (form.skill_codes.length > 0) {
-        const { data: skillRows } = await supabase.from('skills').select('id, code').in('code', form.skill_codes)
-        if (skillRows) {
-          await supabase.from('model_skills').insert(
-            skillRows!.map((s) => ({ model_id: model.id, skill_id: s.id }))
-          )
-        }
-      }
-
-      await supabase.from('consents').insert({
-        model_id: model.id,
-        accepted_rules: form.accepted_rules,
-        image_usage_consent: form.image_usage_consent,
-        data_processing_consent: form.data_processing_consent,
-        accuracy_confirmation: form.accuracy_confirmation,
-        is_minor: isMinor(form.birth_date),
-        parent_name: form.parent_name || null,
-        parent_contact: form.parent_contact || null,
-        parent_consent: form.parent_consent || null,
-      })
-
-      // Upload des photos sélectionnées
-      const uploads = Object.entries(photos).map(([type, file]) =>
-        uploadModelPhoto(model.id, type as PhotoType, file as File)
-      )
-      await Promise.all(uploads)
-
-      sessionStorage.removeItem(DRAFT_KEY)
-      showToast('success', `Profil créé avec succès ! ID : ${model.yms_id}`)
-      navigate('/client/profile')
     } catch (err) {
       const message = formatErrorMessage(err, 'Erreur lors de la création du profil.')
       setErrorMessage(message)
