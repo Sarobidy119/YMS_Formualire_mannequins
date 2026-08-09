@@ -13,7 +13,7 @@ import { Applications } from './admin/pages/Applications'
 import { ActivitiesPage, CastingsPage } from './admin/pages/Operations'
 
 export default function AdminApp() {
-  return <ToastProvider><BrowserRouter><Routes>
+  return <ToastProvider><BrowserRouter future={{ v7_relativeSplatPath: true }}><Routes>
     <Route path="/" element={<Navigate to="/login" replace />} />
     <Route path="/login" element={<Login admin destination="/admin/dashboard" />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />

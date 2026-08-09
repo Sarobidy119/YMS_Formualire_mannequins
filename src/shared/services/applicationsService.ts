@@ -58,13 +58,37 @@ export async function getApplicationPhotoUrls(applicationId: string) {
 }
 
 export async function reviewApplication(applicationId: string, decision: 'approve' | 'reject', note = '') {
+  // Ne laissons jamais l'Edge Function recevoir un jeton expiré : dans ce cas
+  // Supabase renvoie un 401 générique, qui était affiché comme une simple
+  // notification d'erreur dans l'administration.
+  let { data: { session } } = await supabase.auth.getSession()
+  if (!session || new Date(session.expires_at ? session.expires_at * 1000 : 0) <= new Date()) {
+    const { data, error: refreshError } = await supabase.auth.refreshSession()
+    session = data.session
+    if (refreshError || !session) {
+      await supabase.auth.signOut({ scope: 'local' })
+      throw new Error('Votre session administrateur a expiré. Reconnectez-vous avant de valider une candidature.')
+    }
+  }
+
+  const { error: userError } = await supabase.auth.getUser(session.access_token)
+  if (userError) {
+    await supabase.auth.signOut({ scope: 'local' })
+    throw new Error('Votre session administrateur n’est plus valide. Reconnectez-vous avant de valider une candidature.')
+  }
+
   const { data, error } = await supabase.functions.invoke('review-application', {
     body: { applicationId, decision, note },
   })
   if (error) {
     const response = error.context as Response | undefined
     const payload = response ? await response.json().catch(() => null) as { error?: string } | null : null
-    throw new Error(payload?.error || error.message || 'Impossible de traiter la candidature.')
+    const message = payload?.error || error.message || 'Impossible de traiter la candidature.'
+    if (/jwt|non authentifi|unauthori[sz]ed|session/i.test(message)) {
+      await supabase.auth.signOut({ scope: 'local' })
+      throw new Error('Votre session administrateur a expiré. Reconnectez-vous avant de réessayer.')
+    }
+    throw new Error(message)
   }
   const result = data as { ok?: boolean; error?: string } | null
   if (result?.ok === false) throw new Error(result.error || 'Impossible de traiter la candidature.')

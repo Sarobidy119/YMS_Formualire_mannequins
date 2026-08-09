@@ -19,7 +19,7 @@ function ClientHome() {
 }
 
 export default function ClientApp() {
-  return <ToastProvider><BrowserRouter><Routes>
+  return <ToastProvider><BrowserRouter future={{ v7_relativeSplatPath: true }}><Routes>
     <Route path="/" element={<ClientHome />} />
     <Route path="/client" element={<ClientLanding />} />
     <Route path="/login" element={<Login />} />
