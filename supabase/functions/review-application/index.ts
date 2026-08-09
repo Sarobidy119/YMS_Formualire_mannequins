@@ -19,11 +19,16 @@ Deno.serve(async (req) => {
       return Response.json({ ok: true }, { headers: corsHeaders })
     }
     if (decision !== 'approve') throw new Error('Décision invalide.')
+    // Une candidature doit pouvoir être validée même si l'URL de l'espace
+    // mannequin n'est pas encore configurée. Dans ce cas seule l'invitation
+    // est reportée, jamais la création de la fiche.
     const userAppUrl = Deno.env.get('USER_APP_URL')?.replace(/\/$/, '')
-    if (!userAppUrl) throw new Error('La variable USER_APP_URL est manquante dans les secrets Supabase.')
     const d = app.data as Record<string, any>
     const category = d.gender === 'femme' ? 'mannequin_femme' : 'mannequin_homme'
-    const { data: model, error: modelError } = await admin.from('models').insert({ first_name: d.first_name, last_name: d.last_name, birth_date: d.birth_date, gender: d.gender, city: d.city, district: d.district || null, phone: d.phone, whatsapp: d.whatsapp || null, email: app.email, emergency_contact_name: d.emergency_contact_name, emergency_contact_phone: d.emergency_contact_phone, emergency_contact_relation: d.emergency_contact_relation, category, level_yms: d.level_yms || null }).select().single()
+    // Les anciennes colonnes nom/lien sont encore obligatoires sur certaines
+    // bases déjà déployées. Les valeurs de compatibilité évitent de bloquer
+    // une validation pendant que la migration 021 est appliquée.
+    const { data: model, error: modelError } = await admin.from('models').insert({ first_name: d.first_name, last_name: d.last_name, birth_date: d.birth_date, gender: d.gender, city: d.city, district: d.district || null, phone: d.phone, whatsapp: d.whatsapp || null, email: app.email, emergency_contact_name: d.emergency_contact_name || 'Contact d’urgence', emergency_contact_phone: d.emergency_contact_phone, emergency_contact_relation: d.emergency_contact_relation || 'Non renseigné', category, level_yms: d.level_yms || null }).select().single()
     if (modelError) throw modelError
     await admin.from('model_measurements').insert({ model_id: model.id, height_cm: Number(d.height_cm), weight_kg: d.weight_kg ? Number(d.weight_kg) : null, shoe_size: d.shoe_size ? Number(d.shoe_size) : null, clothing_size: d.clothing_size || null, chest_cm: d.chest_cm ? Number(d.chest_cm) : null, waist_cm: d.waist_cm ? Number(d.waist_cm) : null, hips_cm: d.hips_cm ? Number(d.hips_cm) : null, hair_color: d.hair_color || null, eye_color: d.eye_color || null, distinguishing_features: d.distinguishing_features || null })
     await admin.from('availabilities').insert({ model_id: model.id, available_runway: !!d.available_runway, available_shooting: !!d.available_shooting, available_ad: !!d.available_ad, available_event: !!d.available_event, available_days: d.available_days || [], available_hours: d.available_hours || null, can_travel: !!d.can_travel, travel_zone: d.travel_zone || null })
@@ -39,15 +44,15 @@ Deno.serve(async (req) => {
     const paths = (app.photo_paths ?? []) as { type: string; path: string }[]
     if (paths.length) await admin.from('model_photos').insert(paths.map((p) => ({ model_id: model.id, photo_type: p.type, storage_path: p.path })))
     await admin.from('model_applications').update({ status: 'approuvee', model_id: model.id, reviewed_by: user.id, reviewed_at: new Date().toISOString(), review_note: note }).eq('id', app.id)
-    const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(app.email, {
-      data: { full_name: app.full_name },
-      redirectTo: `${userAppUrl}/set-password`,
-    })
-    // Un utilisateur déjà créé n'a pas besoin d'une nouvelle invitation.
-    if (inviteError && !/already (registered|exists)|already been registered/i.test(inviteError.message)) {
-      throw new Error(`Candidature validée, mais l'email d'invitation n'a pas pu être envoyé : ${inviteError.message}`)
-    }
-    return Response.json({ ok: true, invitationSent: !inviteError }, { headers: corsHeaders })
+    const inviteError = userAppUrl
+      ? (await admin.auth.admin.inviteUserByEmail(app.email, {
+          data: { full_name: app.full_name },
+          redirectTo: `${userAppUrl}/set-password`,
+        })).error
+      : { message: 'Invitation non envoyée : USER_APP_URL est absent des secrets Supabase.' }
+    // L'email ne doit jamais annuler une validation déjà enregistrée.
+    // L'administrateur peut vérifier les logs Supabase et renvoyer une invitation si besoin.
+    return Response.json({ ok: true, invitationSent: !inviteError, invitationError: inviteError?.message ?? null }, { headers: corsHeaders })
   } catch (error) {
     // Une réponse 200 permet à l'interface d'afficher le diagnostic métier détaillé
     // plutôt que le message générique "Edge Function non-2xx".

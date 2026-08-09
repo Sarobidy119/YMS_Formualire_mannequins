@@ -149,10 +149,8 @@ export function ModelForm() {
         return 'Le numéro de téléphone doit contenir 10 chiffres et ne peut pas contenir de lettres.'
       if (form.whatsapp && !/^[0-9]{10}$/.test(form.whatsapp))
         return 'Le numéro WhatsApp doit contenir 10 chiffres et ne peut pas contenir de lettres.'
-      if (!form.emergency_contact_name || !form.emergency_contact_phone || !form.emergency_contact_relation)
-        return "Le contact d'urgence est obligatoire."
       if (!/^[0-9]{10}$/.test(form.emergency_contact_phone))
-        return "Le numéro d'urgence doit contenir exactement 10 chiffres."
+        return "Le contact d'urgence doit contenir exactement 10 chiffres."
       const isMinorProfile = form.birth_date ? isMinor(form.birth_date) : false
       if (isMinorProfile && form.parent_contact && !/^[0-9]{10}$/.test(form.parent_contact))
         return 'Le contact du parent/tuteur doit contenir 10 chiffres et ne peut pas contenir de lettres.'
@@ -326,7 +324,7 @@ export function ModelForm() {
               <Field label="Prénom" value={form.first_name} onChange={(v) => update('first_name', v)} placeholder="Ex. : Marie" />
               <Field label="Nom" value={form.last_name} onChange={(v) => update('last_name', v)} placeholder="Ex. : Rakoto" />
             </div>
-            <Field type="date" label="Date de naissance" value={form.birth_date} onChange={(v) => update('birth_date', v)} />
+             <BirthDateField value={form.birth_date} onChange={(v) => update('birth_date', v)} />
             <Field
               label="Sexe"
               value={form.gender}
@@ -361,11 +359,7 @@ export function ModelForm() {
               />
             </div>
             <Field label="Email" type="email" value={form.email} onChange={(v) => update('email', v)} placeholder="Ex. : marie@email.com" required={false} />
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Field label="Contact d'urgence" value={form.emergency_contact_name} onChange={(v) => update('emergency_contact_name', v)} />
-              <Field label="Numéro d'urgence" type="tel" inputMode="numeric" maxLength={10} value={form.emergency_contact_phone} onChange={(v) => update('emergency_contact_phone', sanitizePhone(v))} placeholder="Ex. : 0341234567" hint="10 chiffres uniquement" />
-              <Field label="Relation" value={form.emergency_contact_relation} onChange={(v) => update('emergency_contact_relation', v)} />
-            </div>
+             <Field label="Contact d'urgence" type="tel" inputMode="numeric" maxLength={10} value={form.emergency_contact_phone} onChange={(v) => update('emergency_contact_phone', sanitizePhone(v))} placeholder="Ex. : 0341234567" hint="10 chiffres uniquement" />
             {minor && (
               <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
                 Profil mineur détecté : une autorisation parentale sera demandée à l'étape 7.
@@ -455,7 +449,6 @@ export function ModelForm() {
         {step === 6 && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
-            <p className="text-sm text-gray-500">JPEG, PNG ou WebP — 5 Mo maximum par photo.</p>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               {([
                 ['portrait', 'Portrait naturelle'],
@@ -535,6 +528,54 @@ export function ModelForm() {
       </div>
     </div>
   )
+}
+
+function BirthDateField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const [manualDate, setManualDate] = useState(() => value ? value.split('-').reverse().join('/') : '')
+  const maxDate = new Date().toISOString().slice(0, 10)
+
+  useEffect(() => {
+    setManualDate(value ? value.split('-').reverse().join('/') : '')
+  }, [value])
+
+  function handleManualDate(nextValue: string) {
+    const digits = nextValue.replace(/\D/g, '').slice(0, 8)
+    const formatted = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)].filter(Boolean).join('/')
+    setManualDate(formatted)
+    if (digits.length !== 8) return
+    const day = Number(digits.slice(0, 2))
+    const month = Number(digits.slice(2, 4))
+    const year = Number(digits.slice(4, 8))
+    const parsed = new Date(year, month - 1, day)
+    if (year >= 1900 && parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day) {
+      onChange(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`)
+    }
+  }
+
+  return <div>
+    <label className="mb-1 block text-sm font-medium text-gray-700">Date de naissance <span className="text-red-500">*</span></label>
+    <div className="grid gap-2 sm:grid-cols-2">
+      <input
+        value={manualDate}
+        onChange={(event) => handleManualDate(event.target.value)}
+        inputMode="numeric"
+        placeholder="JJ/MM/AAAA"
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-yms-500 focus:outline-none focus:ring-1 focus:ring-yms-500"
+      />
+      <input
+        type="date"
+        value={value}
+        min="1900-01-01"
+        max={maxDate}
+        onChange={(event) => {
+          onChange(event.target.value)
+          setManualDate(event.target.value ? event.target.value.split('-').reverse().join('/') : '')
+        }}
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-yms-500 focus:outline-none focus:ring-1 focus:ring-yms-500"
+      />
+    </div>
+    <p className="mt-1 text-xs text-gray-500">Saisissez directement la date ou utilisez le calendrier.</p>
+  </div>
 }
 
 type FieldProps<T extends string | string[]> = {

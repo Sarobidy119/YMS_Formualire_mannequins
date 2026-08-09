@@ -14,9 +14,9 @@ export const personalInfoSchema = z.object({
   phone: z.string().regex(/^[0-9+ ]{7,15}$/, 'Numéro de téléphone invalide'),
   whatsapp: z.string().optional(),
   email: z.string().email('Email invalide').optional().or(z.literal('')),
-  emergency_contact_name: z.string().min(2, "Le contact d'urgence est obligatoire"),
-  emergency_contact_phone: z.string().regex(/^\d{10}$/, "Le numéro d'urgence doit contenir exactement 10 chiffres"),
-  emergency_contact_relation: z.string().min(2, 'La relation est obligatoire'),
+  emergency_contact_name: z.string().optional(),
+  emergency_contact_phone: z.string().regex(/^\d{10}$/, "Le contact d'urgence doit contenir exactement 10 chiffres"),
+  emergency_contact_relation: z.string().optional(),
 })
 
 export const measurementsSchema = z.object({

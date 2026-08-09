@@ -8,7 +8,7 @@ type ApplicationValue = string | boolean | string[] | null | undefined
 const FIELD_LABELS: Record<string, string> = {
   first_name: 'Prénom', last_name: 'Nom', birth_date: 'Date de naissance', gender: 'Sexe',
   city: 'Ville', district: 'Quartier', phone: 'Téléphone', whatsapp: 'WhatsApp', email: 'E-mail',
-  emergency_contact_name: "Contact d'urgence", emergency_contact_relation: 'Lien avec le contact',
+  emergency_contact_phone: "Contact d'urgence",
   height_cm: 'Taille (cm)', weight_kg: 'Poids (kg)', shoe_size: 'Pointure', clothing_size: 'Taille vêtement',
   chest_cm: 'Tour de poitrine (cm)', waist_cm: 'Tour de taille (cm)', hips_cm: 'Tour de hanches (cm)',
   hair_color: 'Couleur des cheveux', eye_color: 'Couleur des yeux', distinguishing_features: 'Particularités physiques',
