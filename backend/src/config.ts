@@ -12,6 +12,7 @@ const configuredFrontends = String(
 
 export const config = {
   port: Number(process.env.PORT || 4000),
+  backendOrigin: String(process.env.BACKEND_ORIGIN || ''),
   frontendOrigins: configuredFrontends,
   postgres: {
     connectionString: process.env.DATABASE_URL || 'postgresql://postgres:sarobidy@localhost:5432/yms_db',

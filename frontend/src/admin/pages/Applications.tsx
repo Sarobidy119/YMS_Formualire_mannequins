@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Check, Eye, X } from 'lucide-react'
+import { API_BASE_URL } from '../../lib/api'
 import { getApplicationPhotoUrls, listApplications, reviewApplication, type ModelApplication } from '../../shared/services/applicationsService'
 import { useToast } from '../../shared/components/Toast'
 
@@ -126,7 +127,7 @@ export function Applications() {
           <h3 className="font-semibold">Photos envoyées</h3>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {photoUrls.map((photo) => {
-              const source = photo.signedUrl || photo.path || ''
+              const source = photo.signedUrl || (photo.path ? `${API_BASE_URL.replace(/\/api$/i, '')}/uploads/${photo.path.replace(/^\/+/, '')}` : '')
               return <a key={photo.path} href={source} target="_blank" rel="noreferrer"><img src={source} alt="Photo candidature" className="aspect-square w-full rounded-lg object-cover" /></a>
             })}
           </div>

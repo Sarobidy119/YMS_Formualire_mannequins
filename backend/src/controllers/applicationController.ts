@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express'
 import { ApplicationService } from '../services/applicationService.js'
+import { config } from '../config.js'
 import { resolvePhotoPublicUrl } from '../utils/photoUrl.js'
 
 export class ApplicationController {
@@ -49,7 +50,8 @@ export class ApplicationController {
       const photoPaths = await this.service.getApplicationPhotos(applicationId)
       if (!photoPaths.length) return res.json({ success: true, data: [] })
 
-      const baseUrl = String(req.headers.origin || req.headers.referer || '').replace(/\/$/, '') || process.env.FRONTEND_ORIGIN || ''
+      const protocol = String(req.get('x-forwarded-proto') || req.protocol).replace(/:\/\//, '')
+      const baseUrl = config.backendOrigin || `${protocol}://${req.get('host')}`
       const photos = photoPaths.map((p: string) => ({
         path: p,
         signedUrl: resolvePhotoPublicUrl(p, baseUrl),
