@@ -51,10 +51,9 @@ CREATE TABLE IF NOT EXISTS models (
   yms_id TEXT UNIQUE,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
-  full_name TEXT NOT NULL,
+  full_name TEXT NOT NULL,  
   birth_date DATE,
-  gender TEXT CHECK (gender IN ('femme','homm
-   e')),
+  gender TEXT CHECK (gender IN ('femme','homme')),
   city TEXT,
   district TEXT,
   phone TEXT,

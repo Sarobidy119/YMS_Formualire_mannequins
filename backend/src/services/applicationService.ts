@@ -179,28 +179,12 @@ export class ApplicationService {
           : undefined,
       })
 
-      const signupUrl = (Array.isArray(config.frontendOrigins) && config.frontendOrigins[0])
-        ? `${config.frontendOrigins[0]}/register`
-        : 'http://localhost:5173/register'
-
-      const subject = 'YMS — Votre candidature a été validée'
-      const text = `Bonjour ${fullName},\n\nFélicitations — votre candidature a été validée par l'équipe YMS. Vous pouvez désormais créer votre compte en suivant ce lien : ${signupUrl}\n\nSi vous rencontrez des problèmes, répondez à cet email.`
-      const html = `
-        <p>Bonjour ${fullName},</p>
-        <p><strong>Félicitations</strong> — votre candidature a été validée par l'équipe YMS.</p>
-        <p>Pour créer votre compte et accéder à votre espace, cliquez sur le bouton ci-dessous :</p>
-        <p><a href="${signupUrl}" style="background:#1f2937;color:#fff;padding:10px 14px;text-decoration:none;border-radius:6px;">Créer mon compte</a></p>
-        <p>Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur : <br><a href="${signupUrl}">${signupUrl}</a></p>
-        <p>Si vous avez besoin d'aide, répondez simplement à cet email.</p>
-        <p>— L'équipe YMS</p>
-      `
-
       await transporter.sendMail({
         from: config.mailer.from,
         to: email,
-        subject,
-        text,
-        html,
+        subject: 'Votre compte YMS a été validé',
+        text: `Bonjour ${fullName},\n\nVotre candidature a été validée par l'admin. Vous pouvez maintenant créer votre compte et vous connecter.`,
+        html: `<p>Bonjour ${fullName},</p><p>Votre candidature a été validée par l'administrateur. Vous pouvez maintenant <strong>créer votre compte</strong> et vous connecter.</p>`,
       })
     } catch (error) {
       console.warn('[mailer] Échec de l’envoi de l’email de bienvenue (non bloquant):', error)

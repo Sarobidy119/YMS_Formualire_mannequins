@@ -48,13 +48,11 @@ export async function getCurrentProfile() {
   const token = localStorage.getItem('yms_token')
   if (!token) return null
 
-  const result = await apiFetch<{ user?: Record<string, unknown>; profile?: Record<string, unknown> }>('/auth/me', {
+  const result = await apiFetch<{ user?: Record<string, unknown> }>('/auth/me', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   })
 
-  // Prefer returning the linked model/profile when available (so components
-  // like MyProfile receive the model id). Fall back to the user object.
-  return (result.profile as unknown as Record<string, unknown>) || result.user || null
+  return result.user || null
 }
