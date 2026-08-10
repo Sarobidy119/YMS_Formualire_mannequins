@@ -10,8 +10,8 @@ export function ClientActivities() {
       try {
         const profile = await getCurrentProfile()
         if (!profile?.id) return setActivities([])
-        const data = await getMyActivities(profile.id)
-        setActivities(data)
+        const data = await getMyActivities(String(profile.id))
+        setActivities(Array.isArray(data) ? data : [])
       } catch {
         setActivities([])
       }

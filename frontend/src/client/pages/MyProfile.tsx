@@ -5,7 +5,7 @@ import { StatusBadge } from '../../shared/components/Badge'
 import { Skeleton } from '../../shared/components/Skeleton'
 import { calculateAge } from '../../shared/utils/formatters'
 import { getCurrentProfile, signOut } from '../../shared/services/authService'
-import { useNavigate, Link, Navigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 
 // Vue mannequin : n'affiche JAMAIS admin_notes (includeAdminNotes = false).

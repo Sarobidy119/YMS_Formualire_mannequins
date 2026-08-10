@@ -125,7 +125,10 @@ export function Applications() {
         <div className="mt-6">
           <h3 className="font-semibold">Photos envoyées</h3>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {photoUrls.map((photo) => <a key={photo.path} href={photo.signedUrl ?? '#'} target="_blank" rel="noreferrer"><img src={photo.signedUrl ?? ''} alt="Photo candidature" className="aspect-square w-full rounded-lg object-cover" /></a>)}
+            {photoUrls.map((photo) => {
+              const source = photo.signedUrl || photo.path || ''
+              return <a key={photo.path} href={source} target="_blank" rel="noreferrer"><img src={source} alt="Photo candidature" className="aspect-square w-full rounded-lg object-cover" /></a>
+            })}
           </div>
           {!photoUrls.length && <p className="mt-2 text-sm text-gray-500">Aucune photo envoyée.</p>}
         </div>

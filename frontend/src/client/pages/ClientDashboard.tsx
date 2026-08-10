@@ -13,7 +13,7 @@ export function ClientDashboard() {
         const p = await getCurrentProfile()
         setProfile(p)
         if (p?.id && 'yms_id' in p) {
-          await getModelFullProfile(p.id)
+          await getModelFullProfile(String(p.id))
         }
       } catch {
         // ignore

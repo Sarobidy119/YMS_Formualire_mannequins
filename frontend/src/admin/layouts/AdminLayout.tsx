@@ -37,7 +37,7 @@ export function AdminLayout() {
     navigate('/login')
   }
 
-  const renderNavItems = (onNavigate) => (
+  const renderNavItems = (onNavigate: (() => void) | undefined) => (
     <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
       {navItems.map(({ to, label, icon: Icon }) => (
         <NavLink
@@ -86,7 +86,7 @@ export function AdminLayout() {
             <span className="block text-xs text-gray-400">Espace de gestion</span>
           </div>
         </div>
-        {renderNavItems()}
+        {renderNavItems(undefined)}
         <div className="border-t border-gray-100 p-3">
           <button
             onClick={handleLogout}

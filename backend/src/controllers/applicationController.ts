@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express'
 import { ApplicationService } from '../services/applicationService.js'
+import { resolvePhotoPublicUrl } from '../utils/photoUrl.js'
 
 export class ApplicationController {
   constructor(private readonly service: ApplicationService) {}
@@ -48,7 +49,11 @@ export class ApplicationController {
       const photoPaths = await this.service.getApplicationPhotos(applicationId)
       if (!photoPaths.length) return res.json({ success: true, data: [] })
 
-      const photos = photoPaths.map((p: string) => ({ path: p, signedUrl: String(p).startsWith('http') ? p : null }))
+      const baseUrl = String(req.headers.origin || req.headers.referer || '').replace(/\/$/, '') || process.env.FRONTEND_ORIGIN || ''
+      const photos = photoPaths.map((p: string) => ({
+        path: p,
+        signedUrl: resolvePhotoPublicUrl(p, baseUrl),
+      }))
 
       res.json({ success: true, data: photos })
     } catch (error) {
