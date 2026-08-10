@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
-import { resolve } from 'node:path'
+import { resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { config } from './config.js'
 import { createApplicationRoutes } from './routes/applicationsRoutes.js'
 import { createAuthRoutes } from './routes/authRoutes.js'
@@ -8,6 +9,7 @@ import { createModelsRoutes } from './routes/modelsRoutes.js'
 import { createAdminRoutes } from './routes/adminRoutes.js'
 
 const app = express()
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 app.use('/uploads', express.static(resolve(__dirname, '../uploads')))
 

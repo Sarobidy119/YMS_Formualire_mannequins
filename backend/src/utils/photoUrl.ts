@@ -9,9 +9,10 @@ export function resolvePhotoPublicUrl(pathOrUrl: string | null | undefined, base
 
   const normalized = value.replace(/^\\+/, '').replace(/^\/+/, '')
   const withoutUploadsPrefix = normalized.replace(/^uploads\//i, '')
+  const encodedPath = withoutUploadsPrefix.split('/').map(encodeURIComponent).join('/')
 
-  if (!baseUrl) return `/uploads/${withoutUploadsPrefix}`
+  if (!baseUrl) return `/uploads/${encodedPath}`
 
   const origin = baseUrl.replace(/\/$/, '')
-  return `${origin}/uploads/${withoutUploadsPrefix}`
+  return `${origin}/uploads/${encodedPath}`
 }

@@ -20,7 +20,15 @@ export async function submitApplication(data: Record<string, unknown>, photos: R
     ),
   }
 
-  return apiJson<{ applicationNumber: string }>('/applications', payload)
+  const formData = new FormData()
+  formData.append('payload', JSON.stringify(payload))
+
+  Object.entries(photos).forEach(([type, file]) => {
+    if (!file) return
+    formData.append(`photo_${type}`, file)
+  })
+
+  return apiJson<{ applicationNumber: string }>('/applications', formData, { headers: undefined })
 }
 
 export async function checkRegistrationEligibility(email: string) {

@@ -1,13 +1,39 @@
 import { Router } from 'express'
+import multer from 'multer'
+import { mkdirSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { randomUUID } from 'node:crypto'
 import { ApplicationController } from '../controllers/applicationController.js'
 import { ApplicationService } from '../services/applicationService.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const uploadsDirectory = resolve(__dirname, '../uploads')
+
+// A fresh deployment may not contain this git-ignored directory yet.
+mkdirSync(uploadsDirectory, { recursive: true })
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: uploadsDirectory,
+    filename: (_req, file, cb) => {
+      const extension = file.originalname.match(/\.[a-zA-Z0-9]+$/)?.[0].toLowerCase() || ''
+      cb(null, `${randomUUID()}${extension}`)
+    },
+  }),
+  fileFilter: (_req, file, cb) => {
+    const allowed = /^(image\/jpeg|image\/png|image\/webp)$/i
+    cb(null, allowed.test(file.mimetype))
+  },
+  limits: { files: 6, fileSize: 5 * 1024 * 1024 },
+})
 
 export function createApplicationRoutes() {
   const router = Router()
   const controller = new ApplicationController(new ApplicationService())
 
   router.post('/eligibility', controller.checkEligibility)
-  router.post('/', controller.submit)
+  router.post('/', upload.any(), controller.submit)
   router.get('/:id/photos', controller.getPhotos)
   router.get('/', controller.listAll)
   router.post('/review', controller.review)

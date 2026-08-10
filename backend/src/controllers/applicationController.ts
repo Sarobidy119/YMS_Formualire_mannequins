@@ -17,7 +17,18 @@ export class ApplicationController {
 
   submit = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await this.service.submit(req.body)
+      const files = Array.isArray(req.files) ? req.files as Express.Multer.File[] : []
+      const rawPayload = typeof req.body.payload === 'string'
+        ? JSON.parse(req.body.payload)
+        : req.body || {}
+
+      const uploadedPhotoPaths = files.map((file) => `uploads/${file.filename}`)
+      const payloadWithUploads = {
+        ...rawPayload,
+        photo_paths: uploadedPhotoPaths.length ? uploadedPhotoPaths : rawPayload.photo_paths,
+      }
+
+      const result = await this.service.submit(payloadWithUploads)
       res.status(201).json({ success: true, message: 'Candidature créée.', data: result })
     } catch (error) {
       next(error)
@@ -51,7 +62,8 @@ export class ApplicationController {
       if (!photoPaths.length) return res.json({ success: true, data: [] })
 
       const protocol = String(req.get('x-forwarded-proto') || req.protocol).replace(/:\/\//, '')
-      const baseUrl = config.backendOrigin || `${protocol}://${req.get('host')}`
+      const host = String(req.get('x-forwarded-host') || req.get('host') || '')
+      const baseUrl = config.backendOrigin || (host ? `${protocol}://${host}` : '')
       const photos = photoPaths.map((p: string) => ({
         path: p,
         signedUrl: resolvePhotoPublicUrl(p, baseUrl),

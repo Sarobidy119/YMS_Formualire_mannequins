@@ -40,12 +40,26 @@ function displayValue(value: ApplicationValue) {
   return VALUE_LABELS[String(value)] ?? String(value)
 }
 
+function resolvePhotoSource(photo: { path: string; signedUrl: string | null }) {
+  if (photo.signedUrl) return photo.signedUrl
+
+  const path = String(photo.path || '').trim()
+  if (!path) return ''
+  if (/^https?:\/\//i.test(path) || /^\/\//.test(path)) return path
+
+  const normalized = path.replace(/^\/+/, '').replace(/^uploads\//i, '')
+  const encodedPath = normalized.split('/').map(encodeURIComponent).join('/')
+  const backendOrigin = API_BASE_URL.replace(/\/api\/?$/i, '').replace(/\/$/, '')
+  return `${backendOrigin}/uploads/${encodedPath}`
+}
+
 export function Applications() {
   const [items, setItems] = useState<ModelApplication[]>([])
   const [busy, setBusy] = useState<string | null>(null)
   const [reviewError, setReviewError] = useState<{ id: string; message: string } | null>(null)
   const [selected, setSelected] = useState<ModelApplication | null>(null)
   const [photoUrls, setPhotoUrls] = useState<{ path: string; signedUrl: string | null }[]>([])
+  const [photoLoadErrors, setPhotoLoadErrors] = useState<Record<number, boolean>>({})
   const { showToast } = useToast()
 
   const load = () => listApplications().then(setItems).catch(() => showToast('error', 'Impossible de charger les candidatures.'))
@@ -73,6 +87,7 @@ export function Applications() {
   async function openApplication(application: ModelApplication) {
     setSelected(application)
     setPhotoUrls([])
+    setPhotoLoadErrors({})
     try {
       setPhotoUrls(await getApplicationPhotoUrls(application.id))
     } catch {
@@ -126,9 +141,27 @@ export function Applications() {
         <div className="mt-6">
           <h3 className="font-semibold">Photos envoyées</h3>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {photoUrls.map((photo) => {
-              const source = photo.signedUrl || (photo.path ? `${API_BASE_URL.replace(/\/api$/i, '')}/uploads/${photo.path.replace(/^\/+/, '')}` : '')
-              return <a key={photo.path} href={source} target="_blank" rel="noreferrer"><img src={source} alt="Photo candidature" className="aspect-square w-full rounded-lg object-cover" /></a>
+            {photoUrls.map((photo, index) => {
+              const source = resolvePhotoSource(photo)
+
+              if (!source || photoLoadErrors[index]) {
+                return (
+                  <div key={`missing-${index}`} className="aspect-square flex items-center justify-center rounded-lg bg-gray-100 text-center text-xs text-gray-500">
+                    Image indisponible
+                  </div>
+                )
+              }
+
+              return (
+                <img
+                  key={`photo-${index}`}
+                  src={source}
+                  alt="Photo candidature"
+                  className="aspect-square w-full rounded-lg object-cover"
+                  loading="lazy"
+                  onError={() => setPhotoLoadErrors((prev) => ({ ...prev, [index]: true }))}
+                />
+              )
             })}
           </div>
           {!photoUrls.length && <p className="mt-2 text-sm text-gray-500">Aucune photo envoyée.</p>}

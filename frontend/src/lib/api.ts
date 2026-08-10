@@ -8,12 +8,17 @@ export interface ApiResult<T = unknown> {
 }
 
 export async function apiFetch<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = {
+    ...(init.headers || {}),
+  } as Record<string, string>
+
+  if (!(init.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json'
+  }
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init.headers || {}),
-    },
+    headers,
   })
 
   const payload = await response.json().catch(() => null)
@@ -33,9 +38,13 @@ export async function apiFetch<T = unknown>(path: string, init: RequestInit = {}
 }
 
 export async function apiJson<T = unknown>(path: string, body?: unknown, options?: RequestInit): Promise<T> {
-  return apiFetch<T>(path, {
-    method: 'POST',
-    body: JSON.stringify(body ?? {}),
-    ...options,
-  })
+  const init: RequestInit = { method: 'POST', ...options }
+
+  if (body instanceof FormData) {
+    init.body = body
+  } else {
+    init.body = JSON.stringify(body ?? {})
+  }
+
+  return apiFetch<T>(path, init)
 }
