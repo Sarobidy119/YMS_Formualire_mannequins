@@ -1,7 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { resolve, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { config } from './config.js'
 import { createApplicationRoutes } from './routes/applicationsRoutes.js'
 import { createAuthRoutes } from './routes/authRoutes.js'
@@ -9,9 +8,12 @@ import { createModelsRoutes } from './routes/modelsRoutes.js'
 import { createAdminRoutes } from './routes/adminRoutes.js'
 
 const app = express()
-const __dirname = dirname(fileURLToPath(import.meta.url))
+// Keep the served directory identical in development (src/) and production
+// (dist/). __dirname changes after TypeScript compilation, whereas cwd is the
+// backend service root in both cases.
+const uploadsDirectory = resolve(process.cwd(), 'uploads')
 
-app.use('/uploads', express.static(resolve(__dirname, '../uploads')))
+app.use('/uploads', express.static(uploadsDirectory))
 
 app.use(cors({
   origin: (origin, callback) => {

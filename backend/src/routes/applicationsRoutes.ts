@@ -1,14 +1,15 @@
 import { Router } from 'express'
 import multer from 'multer'
 import { mkdirSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { ApplicationController } from '../controllers/applicationController.js'
 import { ApplicationService } from '../services/applicationService.js'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const uploadsDirectory = resolve(__dirname, '../uploads')
+// Do not derive this directory from __dirname: it is src/ in development and
+// dist/ after a production build. Both static serving and uploads use the
+// backend working directory instead.
+const uploadsDirectory = resolve(process.cwd(), 'uploads')
 
 // A fresh deployment may not contain this git-ignored directory yet.
 mkdirSync(uploadsDirectory, { recursive: true })
