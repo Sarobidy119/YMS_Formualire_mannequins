@@ -10,7 +10,7 @@ export function createAdminRoutes() {
       const genderColumn = await db.query(
         `SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'models' AND column_name = 'gender' LIMIT 1`
       )
-      const hasGender = genderColumn.rowCount > 0
+      const hasGender = (genderColumn.rowCount ?? 0) > 0
 
       const result = await db.query(
         `SELECT
